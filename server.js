@@ -4,8 +4,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3009;
 
+// Middleware
 app.use(express.json());
 app.use(cors()); // Allow cross-origin requests
 
@@ -31,6 +31,7 @@ const initialPrompt = `You are Devi, a secure, professional, and empathetic AI a
 4. Acting as a bridge between victims and organizational or legal channels, such as Internal Complaints Committees (ICCs), while fostering trust and prioritizing the user’s comfort and safety.
 Maintain a supportive, empowering tone while delivering clear, precise, and actionable information to users at every step of the process.`;
 
+// Set up chat session
 const chatSession = model.startChat({
     generationConfig,
     history: [
@@ -39,6 +40,7 @@ const chatSession = model.startChat({
     ],
 });
 
+// Serve static files
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
@@ -47,6 +49,7 @@ app.get('/loader.gif', (req, res) => {
     res.sendFile(__dirname + '/loader.gif');
 });
 
+// Chat API route
 app.post('/chat', async (req, res) => {
     try {
         const userMessage = req.body.userInput;
@@ -64,6 +67,5 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+// Export the app for Vercel
+module.exports = app;
