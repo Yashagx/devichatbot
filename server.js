@@ -1,15 +1,16 @@
 const express = require('express');
-const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require("@google/generative-ai");
+const cors = require('cors');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require('dotenv').config();
-const { GoogleAIFileManager } = require("@google/generative-ai/server");
 
 const app = express();
 const port = process.env.PORT || 3009;
+
 app.use(express.json());
+app.use(cors()); // Allow cross-origin requests
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
-const fileManager = new GoogleAIFileManager(apiKey);
 
 const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash-8b",
@@ -34,7 +35,7 @@ const chatSession = model.startChat({
     generationConfig,
     history: [
         { role: "user", parts: [{ text: initialPrompt }] },
-        { role: "model", parts: [{ text: "Hello. I'm Devi, your confidential AI assistant designed to help you navigate workplace harassment. I understand this is a difficult situation, and I'm here to provide support and guidance every step of the way. Your privacy and safety are my top priorities. All information shared with me is secured using blockchain technology, ensuring confidentiality and immutability. How can I assist you today?" }] },
+        { role: "model", parts: [{ text: "Hello. I'm Devi, your confidential AI assistant. How can I assist you today?" }] },
     ],
 });
 
@@ -49,19 +50,14 @@ app.get('/loader.gif', (req, res) => {
 app.post('/chat', async (req, res) => {
     try {
         const userMessage = req.body.userInput;
-
-        if (typeof userMessage !== 'string' && !Array.isArray(userMessage)) {
-            return res.status(400).json({ error: 'Message must be a string or array' });
+        if (typeof userMessage !== 'string' || !userMessage.trim()) {
+            return res.status(400).json({ error: 'Invalid input message' });
         }
 
         const result = await chatSession.sendMessage(userMessage);
         const responseText = result.response.text();
 
-        
-        const personalizedResponse = responseText.replace(/\[User\]/g, req.body.userName || 'User');
-
-        res.json({ response: personalizedResponse });
-
+        res.json({ response: responseText });
     } catch (error) {
         console.error("Error handling chat request:", error);
         res.status(500).json({ error: "Internal Server Error" });
@@ -69,5 +65,5 @@ app.post('/chat', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });
